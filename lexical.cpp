@@ -35,23 +35,23 @@ enum TOKEN_TYPES
 // State table for transvering through the lexeme
 // A string can either be a KEYWORD or an IDENTIFIER
 int stateTable[][9] = {
-	{0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, UNKNOWN, COMMENT, SPACE},
-	{INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	{REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	{SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	{OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT, REJECT},
-	{STRING, STRING, STRING, REJECT, STRING, STRING, REJECT, REJECT, REJECT},
-	{UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, REJECT, UNKNOWN},
-	{SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
+	/* PLACE HOLDER STATE */ {0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, UNKNOWN, COMMENT, SPACE},
+	/* INTEGER STATE */ 	{INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* REAL STATE */ 		{REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* SEPERATOR STATE */	{SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* OPERATOR STATE */	{OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT, REJECT},
+	/* STRING STATE */		{STRING, STRING, STRING, REJECT, STRING, STRING, REJECT, REJECT, REJECT},
+	/* UNKNOWN STATE */		{UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, REJECT, UNKNOWN},
+	/* REJECT STATE */		{SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
 
 /*
     A struct to hold a token information
 */
 struct Token
 {
-	int lexemeNum = 0;
-	string token = "";
-	string lexemeName = "";
+	int lexemeNum;
+	string token;
+	string lexemeName;
 };
 
 // Set to hold seperators
@@ -59,23 +59,23 @@ static const unordered_set<char> SEPERATORS({'{', '}', '[', ']', '(', ')', ',', 
 // Set to hold operators
 static const unordered_set<char> OPERATORS({'+', '-', '*', '/', '=', '<', '>', '%'});
 // Set to hold special characters
-// static const unordered_set<char> SPECIALS({'!', '_'});
+static const unordered_set<char> SPECIALS({'!', '_'});
 // Set to hold keywords
 static const unordered_set<string> KEYWORDS({"int", "float", "bool", "True", "False",
 											 "if", "else", "then", "endif", "endelse", "while", "whileend", "do",
 											 "enddo", "for", "endfor", "STDinput", "STDoutput", "and", "or", "not"});
 
 /* PROTOTYPES FOR THE FUNCTIONS */
-vector<Token> lexer(string);
-int getCharState(char);
-string getLexemeName(int, string);
+vector<Token> lexer(string expression);
+int getCharState(char currentChar);
+string getLexemeName(int lexemeNum, string token);
 
 int main()
 {
 	// Declare variables for reading file
 	ifstream infile;
-	string fileName;
-	string line;
+	string fileName = "";
+	string line = "";
 
 	// A vector hold the tokens
 	vector<Token> tokens;
@@ -102,11 +102,11 @@ int main()
 		// Display the tokens to the screen
 		for (unsigned x = 0; x < tokens.size(); ++x)
 		{
-			if (tokens[x].lexemeNum != COMMENT)
-			{
-				cout << tokens[x].lexemeName << "  \t"
-					 << tokens[x].token << endl;
-			}
+			// if (tokens[x].lexemeNum != COMMENT)
+			// {
+			cout << tokens[x].lexemeName << "  \t"
+				 << tokens[x].token << endl;
+			// }
 		}
 	}
 
@@ -117,22 +117,22 @@ int main()
 	return 0;
 }
 
-/*
+/**
 *	FUNCTION: lexer
-* USE: go through the string to return a list of tokens.
-* @param expression - the code line
-* @return - a list of tokens
+*	USE: go through the string to return a list of tokens.
+*	@param expression - the code line
+*	@return tokens - a list of tokens
 */
 vector<Token> lexer(string expression)
 {
 	// Variable for the state machine
 	Token access;
 	vector<Token> tokens;
-	string currentToken = "";
 	char currentChar = ' ';
 	int charState = REJECT;
 	int currentState = REJECT;
 	int prevState = REJECT;
+	string currentToken = "";
 
 	// Go through each character
 	for (unsigned x = 0; x < expression.length();)
@@ -176,10 +176,9 @@ vector<Token> lexer(string expression)
 			access.lexemeName = getLexemeName(access.lexemeNum, access.token);
 			tokens.push_back(access);
 		}
-
-		// Return the list of tokens
-		return tokens;
 	}
+	// Return the list of tokens
+	return tokens;
 };
 
 /*
@@ -215,7 +214,7 @@ int getCharState(char currentChar)
 	}
 
 	// Check for characters
-	else if (isalpha(currentChar) || currentChar == '_')
+	else if (isalpha(currentChar) /*|| currentChar == '_'*/)
 	{
 		return STRING;
 	}
