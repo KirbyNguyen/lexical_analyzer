@@ -89,6 +89,9 @@ int main()
 	string fileName;
 	string line;
 
+	// Data holder for seperators
+	static const unordered_set<char> seperators({ '{', '}', '[', ']', '(', ')', ',', '.', ';', ':' });
+
 	// Read the file
 	cout << "\nPlease enter the name of the file: ";
 	getline(cin, fileName);
@@ -103,10 +106,15 @@ int main()
 		exit(1);
 	}
 
+	getline(infile, line);
 	// Get each line in the text file
-	while (getline(infile, line))
-	{
-	}
+	//while (getline(infile, line))
+	//{
+		for (int i = 0; i < line.size(); i++)
+		{
+			cout << "This is a character in the file: " << line[i] << endl;
+		}
+	//}
 
 	// Close the file
 	infile.close();
@@ -114,3 +122,7 @@ int main()
 
 	return 0;
 }
+
+void lexer(char ch){
+	
+};
