@@ -12,6 +12,7 @@ Group Members: Duc Nguyen, Wayne Lin
 #include <fstream>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 using namespace std;
 
@@ -27,8 +28,21 @@ enum TOKEN_TYPES
 	OPERATOR,
 	STRING,
 	UNKNOWN,
+	COMMENT,
 	SPACE
 };
+
+// State table for transvering through the lexeme
+// A string can either be a KEYWORD or an IDENTIFIER
+int stateTable[][9] = {
+	{0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, UNKNOWN, COMMENT, SPACE},
+	{INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	{REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	{SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	{OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT, REJECT},
+	{STRING, STRING, STRING, REJECT, STRING, STRING, REJECT, REJECT, REJECT},
+	{UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, REJECT, UNKNOWN},
+	{SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
 
 /*
     A struct to hold a token information
@@ -40,55 +54,21 @@ struct Token
 	string lexemeName = "";
 };
 
-/*
-*	FUNCTION: getLexemeName
-* USE: takes a number and return the corresponding string to the token type.
-* @param lexemeNum - integer that corresponds to the state
-* @return - a string of the state
-*/
-string getLexemeName(int lexemeNum)
-{
-	switch (lexemeNum)
-	{
-	case INTEGER:
-		return "INTEGER";
-		break;
-	case REAL:
-		return "REAL";
-		break;
-	case SEPERATOR:
-		return "SEPERATOR";
-		break;
-	case OPERATOR:
-		return "OPERATOR";
-		break;
-	case STRING:
-		return "STRING";
-		break;
-	case UNKNOWN:
-		return "UNKNOWN";
-		break;
-	case SPACE:
-		return "SPACE";
-		break;
-	default:
-		return "ERROR";
-		break;
-	};
-};
-
-vector<Token> lexer(string);
-
 // Set to hold seperators
 static const unordered_set<char> SEPERATORS({'{', '}', '[', ']', '(', ')', ',', '.', ';', ':'});
 // Set to hold operators
 static const unordered_set<char> OPERATORS({'+', '-', '*', '/', '=', '<', '>', '%'});
 // Set to hold special characters
-static const unordered_set<char> SPECIALS({'!', '_'});
+// static const unordered_set<char> SPECIALS({'!', '_'});
 // Set to hold keywords
 static const unordered_set<string> KEYWORDS({"int", "float", "bool", "True", "False",
 											 "if", "else", "then", "endif", "endelse", "while", "whileend", "do",
 											 "enddo", "for", "endfor", "STDinput", "STDoutput", "and", "or", "not"});
+
+/* PROTOTYPES FOR THE FUNCTIONS */
+vector<Token> lexer(string);
+int getCharState(char);
+string getLexemeName(int, string);
 
 int main()
 {
@@ -122,8 +102,11 @@ int main()
 		// Display the tokens to the screen
 		for (unsigned x = 0; x < tokens.size(); ++x)
 		{
-			cout << tokens[x].lexemeName << "  \t"
-				 << tokens[x].token << endl;
+			if (tokens[x].lexemeNum != COMMENT)
+			{
+				cout << tokens[x].lexemeName << "  \t"
+					 << tokens[x].token << endl;
+			}
 		}
 	}
 
@@ -147,6 +130,7 @@ vector<Token> lexer(string expression)
 	vector<Token> tokens;
 	string currentToken = "";
 	char currentChar = ' ';
+	int charState = REJECT;
 	int currentState = REJECT;
 	int prevState = REJECT;
 
@@ -154,9 +138,13 @@ vector<Token> lexer(string expression)
 	for (unsigned x = 0; x < expression.length();)
 	{
 
-		// TODO: check the current state of the character
+		// Check the current state of the character
+		currentChar = expression[x];
+		charState = getCharState(currentChar);
 
-		
+		// Get the current state
+		currentState = stateTable[currentState][charState];
+
 		// If the current state is REJECT, we have started a new parse,
 		// and the old one is succesfull.
 		// If not, continue finding a token
@@ -166,7 +154,7 @@ vector<Token> lexer(string expression)
 			{
 				access.token = currentToken;
 				access.lexemeNum = prevState;
-				access.lexemeName = getLexemeName(access.lexemeNum);
+				access.lexemeName = getLexemeName(access.lexemeNum, access.token);
 				tokens.push_back(access);
 			}
 			currentToken = "";
@@ -185,11 +173,101 @@ vector<Token> lexer(string expression)
 		{
 			access.token = currentToken;
 			access.lexemeNum = currentState;
-			access.lexemeName = getLexemeName(access.lexemeNum);
+			access.lexemeName = getLexemeName(access.lexemeNum, access.token);
 			tokens.push_back(access);
 		}
 
 		// Return the list of tokens
 		return tokens;
 	}
+};
+
+/*
+* FUNCTION: getCharState
+* USE: get the corresponding state based on the current character
+* @param currentChar - the current char
+* @return int - the current state of the character
+*/
+int getCharState(char currentChar)
+{
+	// Check for whitespace
+	if (isspace(currentChar))
+	{
+		return SPACE;
+	}
+
+	// Check for integer numbers
+	else if (isdigit(currentChar))
+	{
+		return INTEGER;
+	}
+
+	// Check for real numbers
+	else if (currentChar == '.')
+	{
+		return REAL;
+	}
+
+	// Check for comments
+	else if (currentChar == '!')
+	{
+		return COMMENT;
+	}
+
+	// Check for characters
+	else if (isalpha(currentChar) || currentChar == '_')
+	{
+		return STRING;
+	}
+
+	// Check for seperators
+	else if (SEPERATORS.find(currentChar) != SEPERATORS.end())
+	{
+		return SEPERATOR;
+	}
+
+	// Check for operators
+	else if (OPERATORS.find(currentChar) != OPERATORS.end())
+	{
+		return OPERATOR;
+	}
+
+	return UNKNOWN;
+}
+
+/*
+*	FUNCTION: getLexemeName
+* USE: takes a number and return the corresponding string to the token type.
+* @param lexemeNum - integer that corresponds to the state
+* @return - a string of the state
+*/
+string getLexemeName(int lexemeNum, string token)
+{
+	switch (lexemeNum)
+	{
+	case INTEGER:
+		return "INTEGER";
+		break;
+	case REAL:
+		return "REAL";
+		break;
+	case SEPERATOR:
+		return "SEPERATOR";
+		break;
+	case OPERATOR:
+		return "OPERATOR";
+		break;
+	case STRING:
+		return (KEYWORDS.find(token) != KEYWORDS.end() ? "KEYWORD" : "IDENTIFER");
+		break;
+	case UNKNOWN:
+		return "UNKNOWN";
+		break;
+	case SPACE:
+		return "SPACE";
+		break;
+	default:
+		return "ERROR";
+		break;
+	};
 };
