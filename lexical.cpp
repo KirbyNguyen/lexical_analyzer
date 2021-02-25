@@ -6,17 +6,12 @@ Group Members: Duc Nguyen, Wayne Lin
 
 **********/
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <iterator>
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <regex>
-#include <list>
-#include <set>
 #include <unordered_set>
-#include <map>
 
 using namespace std;
 
@@ -40,9 +35,9 @@ enum TOKEN_TYPES
 */
 struct Token
 {
-	string token;
-	int lexemeNum;
-	string lexemeName;
+	int lexemeNum = 0;
+	string token = "";
+	string lexemeName = "";
 };
 
 /*
@@ -82,6 +77,19 @@ string getLexemeName(int lexemeNum)
 	};
 };
 
+vector<Token> lexer(string);
+
+// Set to hold seperators
+static const unordered_set<char> SEPERATORS({'{', '}', '[', ']', '(', ')', ',', '.', ';', ':'});
+// Set to hold operators
+static const unordered_set<char> OPERATORS({'+', '-', '*', '/', '=', '<', '>', '%'});
+// Set to hold special characters
+static const unordered_set<char> SPECIALS({'!', '_'});
+// Set to hold keywords
+static const unordered_set<string> KEYWORDS({"int", "float", "bool", "True", "False",
+											 "if", "else", "then", "endif", "endelse", "while", "whileend", "do",
+											 "enddo", "for", "endfor", "STDinput", "STDoutput", "and", "or", "not"});
+
 int main()
 {
 	// Declare variables for reading file
@@ -89,8 +97,8 @@ int main()
 	string fileName;
 	string line;
 
-	// Data holder for seperators
-	static const unordered_set<char> seperators({ '{', '}', '[', ']', '(', ')', ',', '.', ';', ':' });
+	// A vector hold the tokens
+	vector<Token> tokens;
 
 	// Read the file
 	cout << "\nPlease enter the name of the file: ";
@@ -106,15 +114,18 @@ int main()
 		exit(1);
 	}
 
-	getline(infile, line);
 	// Get each line in the text file
-	//while (getline(infile, line))
-	//{
-		for (int i = 0; i < line.size(); i++)
+	while (getline(infile, line))
+	{
+		tokens = lexer(line);
+
+		// Display the tokens to the screen
+		for (unsigned x = 0; x < tokens.size(); ++x)
 		{
-			cout << "This is a character in the file: " << line[i] << endl;
+			cout << tokens[x].lexemeName << "  \t"
+				 << tokens[x].token << endl;
 		}
-	//}
+	}
 
 	// Close the file
 	infile.close();
@@ -123,6 +134,62 @@ int main()
 	return 0;
 }
 
-void lexer(char ch){
-	
+/*
+*	FUNCTION: lexer
+* USE: go through the string to return a list of tokens.
+* @param expression - the code line
+* @return - a list of tokens
+*/
+vector<Token> lexer(string expression)
+{
+	// Variable for the state machine
+	Token access;
+	vector<Token> tokens;
+	string currentToken = "";
+	char currentChar = ' ';
+	int currentState = REJECT;
+	int prevState = REJECT;
+
+	// Go through each character
+	for (unsigned x = 0; x < expression.length();)
+	{
+
+		// TODO: check the current state of the character
+
+		
+		// If the current state is REJECT, we have started a new parse,
+		// and the old one is succesfull.
+		// If not, continue finding a token
+		if (currentState == REJECT)
+		{
+			if (prevState != SPACE) // Ignore whitespace
+			{
+				access.token = currentToken;
+				access.lexemeNum = prevState;
+				access.lexemeName = getLexemeName(access.lexemeNum);
+				tokens.push_back(access);
+			}
+			currentToken = "";
+		}
+		else
+		{
+			currentToken += currentChar;
+			++x;
+		}
+
+		// Set the previous state before going to a new state
+		prevState = currentState;
+
+		// Make sure the last token is included
+		if (currentState != SPACE && currentToken != "")
+		{
+			access.token = currentToken;
+			access.lexemeNum = currentState;
+			access.lexemeName = getLexemeName(access.lexemeNum);
+			tokens.push_back(access);
+		}
+
+		// Return the list of tokens
+		return tokens;
+	}
 };
