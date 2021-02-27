@@ -68,7 +68,7 @@ static const unordered_set<string> KEYWORDS({"int", "float", "bool", "True", "Fa
 
 /* PROTOTYPES FOR THE FUNCTIONS */
 vector<Token> lexer(string expression);
-int getCharState(char currentChar);
+int getCharState(char currentChar, char prevState);
 string getLexemeName(int lexemeNum, string token);
 
 int main()
@@ -142,7 +142,7 @@ vector<Token> lexer(string expression)
 
 		// Check the current state of the character
 		currentChar = expression[x];
-		charState = getCharState(currentChar);
+		charState = getCharState(currentChar, prevState);
 
 		// Get the current state
 		currentState = stateTable[currentState][charState];
@@ -186,7 +186,7 @@ vector<Token> lexer(string expression)
 * @param currentChar - the current char
 * @return int - the current state of the character
 */
-int getCharState(char currentChar)
+int getCharState(char currentChar, char prevState)
 {
 	// Check for whitespace
 	if (isspace(currentChar))
@@ -203,7 +203,7 @@ int getCharState(char currentChar)
 	// Check for real numbers
 	else if (currentChar == '.')
 	{
-		return REAL;
+		return (prevState == INTEGER ? REAL : SEPERATOR);
 	}
 
 	// Check for characters
@@ -247,7 +247,7 @@ string getLexemeName(int lexemeNum, string token)
 		return "INTEGER";
 		break;
 	case REAL:
-		return "REAL";
+		return "REAL    ";
 		break;
 	case SEPERATOR:
 		return "SEPERATOR";
@@ -265,10 +265,10 @@ string getLexemeName(int lexemeNum, string token)
 		return "UNKNOWN";
 		break;
 	case SPACE:
-		return "SPACE";
+		return "SPACE   ";
 		break;
 	default:
-		return "ERROR";
+		return "ERROR   ";
 		break;
 	};
 };
