@@ -28,21 +28,20 @@ enum TOKEN_TYPES
 	OPERATOR,
 	STRING,
 	UNKNOWN,
-	COMMENT,
 	SPACE
 };
 
 // State table for transvering through the lexeme
 // A string can either be a KEYWORD or an IDENTIFIER
-int stateTable[][9] = {
-	/* PLACE HOLDER STATE */ {0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, UNKNOWN, COMMENT, SPACE},
-	/* INTEGER STATE */ 	{INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	/* REAL STATE */ 		{REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	/* SEPERATOR STATE */	{SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	/* OPERATOR STATE */	{OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT, REJECT},
-	/* STRING STATE */		{STRING, STRING, STRING, REJECT, STRING, STRING, REJECT, REJECT, REJECT},
-	/* UNKNOWN STATE */		{UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, REJECT, UNKNOWN},
-	/* REJECT STATE */		{SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
+int stateTable[][8] = {
+	/* PLACE HOLDER STATE */ {0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, UNKNOWN, SPACE},
+	/* INTEGER STATE */ {INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* REAL STATE */ {REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* SEPERATOR STATE */ {SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* OPERATOR STATE */ {OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT},
+	/* STRING STATE */ {STRING, STRING, STRING, REJECT, STRING, STRING, STRING, REJECT},
+	/* UNKNOWN STATE */ {UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN},
+	/* REJECT STATE */ {SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
 
 /*
     A struct to hold a token information
@@ -150,7 +149,7 @@ vector<Token> lexer(string expression)
 		// If not, continue finding a token
 		if (currentState == REJECT)
 		{
-			if (prevState != SPACE) // Ignore whitespace
+			if (prevState != SPACE) // we dont care about whitespace
 			{
 				access.token = currentToken;
 				access.lexemeNum = prevState;
@@ -164,22 +163,18 @@ vector<Token> lexer(string expression)
 			currentToken += currentChar;
 			++x;
 		}
-
-		// Set the previous state before going to a new state
 		prevState = currentState;
-
-		// Make sure the last token is included
-		if (currentState != SPACE && currentToken != "")
-		{
-			access.token = currentToken;
-			access.lexemeNum = currentState;
-			access.lexemeName = getLexemeName(access.lexemeNum, access.token);
-			tokens.push_back(access);
-		}
 	}
-	// Return the list of tokens
+
+	if (currentState != SPACE && currentToken != "")
+	{
+		access.token = currentToken;
+		access.lexemeNum = currentState;
+		access.lexemeName = getLexemeName(access.lexemeNum, access.token);
+		tokens.push_back(access);
+	}
 	return tokens;
-};
+} // end of Lexer
 
 /*
 * FUNCTION: getCharState
@@ -207,14 +202,8 @@ int getCharState(char currentChar)
 		return REAL;
 	}
 
-	// Check for comments
-	else if (currentChar == '!')
-	{
-		return COMMENT;
-	}
-
 	// Check for characters
-	else if (isalpha(currentChar) /*|| currentChar == '_'*/)
+	else if (isalpha(currentChar))
 	{
 		return STRING;
 	}
