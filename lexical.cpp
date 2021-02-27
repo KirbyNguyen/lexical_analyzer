@@ -27,21 +27,23 @@ enum TOKEN_TYPES
 	SEPERATOR,
 	OPERATOR,
 	STRING,
+	IGNORE,
 	UNKNOWN,
 	SPACE
 };
 
 // State table for transvering through the lexeme
 // A string can either be a KEYWORD or an IDENTIFIER
-int stateTable[][8] = {
-	/* PLACE HOLDER STATE */ {0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, UNKNOWN, SPACE},
-	/* INTEGER STATE */ {INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT},
-	/* REAL STATE */ {REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT},
-	/* SEPERATOR STATE */ {SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
-	/* OPERATOR STATE */ {OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT},
-	/* STRING STATE */ {STRING, STRING, STRING, REJECT, STRING, STRING, STRING, REJECT},
-	/* UNKNOWN STATE */ {UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN},
-	/* REJECT STATE */ {SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
+int stateTable[][9] = {
+	/* PLACE HOLDER STATE */ {0, INTEGER, REAL, SEPERATOR, OPERATOR, STRING, IGNORE, UNKNOWN, SPACE},
+	/* INTEGER STATE */ {INTEGER, INTEGER, REAL, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* REAL STATE */ {REAL, REAL, UNKNOWN, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* SEPERATOR STATE */ {SEPERATOR, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT},
+	/* OPERATOR STATE */ {OPERATOR, REJECT, REJECT, REJECT, OPERATOR, STRING, REJECT, REJECT, REJECT},
+	/* STRING STATE */ {STRING, STRING, STRING, REJECT, STRING, STRING, STRING, STRING, REJECT},
+	/* IGNORE STATE */ {IGNORE, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE, REJECT, IGNORE, IGNORE},
+	/* UNKNOWN STATE */ {UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN},
+	/* REJECT STATE */ {SPACE, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT, REJECT}};
 
 /*
     A struct to hold a token information
@@ -101,11 +103,12 @@ int main()
 		// Display the tokens to the screen
 		for (unsigned x = 0; x < tokens.size(); ++x)
 		{
-			// if (tokens[x].lexemeNum != COMMENT)
-			// {
+			// Don't print out the comment
+			if (tokens[x].lexemeNum != IGNORE)
+			{
 			cout << tokens[x].lexemeName << "  \t"
 				 << tokens[x].token << endl;
-			// }
+			}
 		}
 	}
 
@@ -166,6 +169,7 @@ vector<Token> lexer(string expression)
 		prevState = currentState;
 	}
 
+	// Include the last character
 	if (currentState != SPACE && currentToken != "")
 	{
 		access.token = currentToken;
@@ -208,6 +212,12 @@ int getCharState(char currentChar)
 		return STRING;
 	}
 
+	// Check for comment
+	else if (currentChar == '!')
+	{
+		return IGNORE;
+	}
+
 	// Check for seperators
 	else if (SEPERATORS.find(currentChar) != SEPERATORS.end())
 	{
@@ -224,7 +234,7 @@ int getCharState(char currentChar)
 }
 
 /*
-*	FUNCTION: getLexemeName
+* FUNCTION: getLexemeName
 * USE: takes a number and return the corresponding string to the token type.
 * @param lexemeNum - integer that corresponds to the state
 * @return - a string of the state
@@ -247,6 +257,9 @@ string getLexemeName(int lexemeNum, string token)
 		break;
 	case STRING:
 		return (KEYWORDS.find(token) != KEYWORDS.end() ? "KEYWORD" : "IDENTIFER");
+		break;
+	case IGNORE:
+		return "COMMENT";
 		break;
 	case UNKNOWN:
 		return "UNKNOWN";
