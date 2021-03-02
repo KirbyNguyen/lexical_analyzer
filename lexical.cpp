@@ -6,6 +6,13 @@ Group Members: Duc Nguyen, Wayne Lin
 
 **********/
 
+/**************
+Instructions
+1) Run the .exe
+2) Enter name of text file when prompted
+3) View results
+**************/
+
 #include <stdlib.h>
 #include <iterator>
 #include <iostream>
@@ -94,6 +101,8 @@ int main()
 		cout << "\n** ERROR - the file \"" << fileName << "\" cannot be found!\n\n";
 		exit(1);
 	}
+
+  cout << "TOKENS                  LEXEMES" << endl << endl;
 
 	// Get each line in the text file
 	while (getline(infile, line))
@@ -244,31 +253,31 @@ string getLexemeName(int lexemeNum, string token)
 	switch (lexemeNum)
 	{
 	case INTEGER:
-		return "INTEGER";
+		return "INTEGER         =    ";
 		break;
 	case REAL:
-		return "REAL    ";
+		return "REAL            =    ";
 		break;
 	case SEPERATOR:
-		return "SEPERATOR";
+		return "SEPERATOR       =    ";
 		break;
 	case OPERATOR:
-		return "OPERATOR";
+		return "OPERATOR        =   ";
 		break;
 	case STRING:
-		return (KEYWORDS.find(token) != KEYWORDS.end() ? "KEYWORD" : "IDENTIFER");
+		return (KEYWORDS.find(token) != KEYWORDS.end() ? "KEYWORD         =    " : "IDENTIFER       =    ");
 		break;
 	case IGNORE:
-		return "COMMENT";
+		return "COMMENT         =   ";
 		break;
 	case UNKNOWN:
-		return "UNKNOWN";
+		return "UNKNOWN         =   ";
 		break;
 	case SPACE:
-		return "SPACE   ";
+		return "SPACE           =   ";
 		break;
 	default:
-		return "ERROR   ";
+		return "ERROR           =   ";
 		break;
 	};
 };
