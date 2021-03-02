@@ -2,7 +2,7 @@
 
 Lexical Analyzer
 
-Group Members: Duc Nguyen, Wayne Lin
+Group Members: Duc Nguyen (887323301), Wayne Lin (887280121)
 
 **********/
 
@@ -209,7 +209,7 @@ int getCharState(char currentChar, char prevState)
 		return INTEGER;
 	}
 
-	// Check for real numbers
+	// Check for real numbers or period
 	else if (currentChar == '.')
 	{
 		return (prevState == INTEGER ? REAL : SEPERATOR);
