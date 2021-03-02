@@ -32,6 +32,7 @@ After lexical analysis concludes the ifstream is flushed from memory and the pro
 
 
 4. Any Limitation
+
 None
 
 Tested and works with a 1 million line text file (51MB), although it takes several minutes to compute.
@@ -42,4 +43,5 @@ yes "Filler text () {12.5}. int num_00 123; STDinput..." | head -n 1000000 > gia
 
 
 5. Any shortcomings
+
 None
